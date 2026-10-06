@@ -807,6 +807,23 @@ label.btn select{border:0;background:none;padding:0;height:auto}
 <input type="file" id="restoreFile" accept="application/json,.json" hidden>
 <script>
 "use strict";
+(()=>{
+  const OLD="green-bay-0caaeff00.3.azurestaticapps.net",NEW="https://cc26plan.nb-cs.net";
+  if(location.hostname===OLD){
+    const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("cybercon2026-"))data[k]=localStorage.getItem(k)}
+    let carry="";try{carry=Object.keys(data).length?"&migrate="+btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(data)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""):""}catch{}
+    const h=location.hash.replace(/^#/,""),frag=h+carry;location.replace(NEW+"/"+location.search+(frag?"#"+frag:""));throw new Error("moved");
+  }
+  const m=/[#&]migrate=([^&]+)/.exec(location.hash);
+  if(m){
+    try{const j=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0))));
+      // Don't overwrite a plan someone has already started on the new address.
+      if(!localStorage.getItem("cybercon2026-plan-v1")||localStorage.getItem("cybercon2026-plan-v1")==="{}")
+        for(const [k,v] of Object.entries(j))if(k.startsWith("cybercon2026-")&&typeof v==="string")localStorage.setItem(k,v);
+    }catch{}
+    const rest=location.hash.replace(/[#&]migrate=[^&]+/,"").replace(/^#&?/,"#");history.replaceState(null,"",location.pathname+location.search+(rest==="#"?"":rest));
+  }
+})();
 const RAW=/*@RAW@*/[], COLORS={"Break": "#d9d9da", "Other": "#7394f7", "Keynote": "#FBA3E7", "Featured": "#FFC4AE", "Knowledge Hub": "#E2B3EB", "Careers Village": "#FFD465", "Breakout": "#AFC2FB", "Panel": "#9DEBE4", "Think Tank": "#E8FCB2", "Ask an Expert": "#FF9872", "Workshop": "#FFE6A7", "Networking": "#54dcd0"}, SCRAPED=/*@SCRAPED@*/"";
 // Differences found by update_program.py since the first snapshot: {id, kind: new|moved|time|retitled|cancelled, was, now, date}.
 const CHANGES=/*@CHANGES@*/[];

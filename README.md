@@ -3,7 +3,7 @@
 > **Unofficial.** An independent attendee tool for CyberCon 2026 (Melbourne, 14–16 October 2026).
 > Not affiliated with or endorsed by AISA, CyberCon or MCEC.
 
-**Live:** https://green-bay-0caaeff00.3.azurestaticapps.net · **Feedback:** [open an issue](../../issues/new/choose)
+**Live:** https://cc26plan.nb-cs.net · **Feedback:** [open an issue](../../issues/new/choose)
 
 A single-page, offline-capable planner for the conference program:
 
