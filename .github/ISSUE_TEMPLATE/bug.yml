@@ -1,0 +1,33 @@
+name: "🐞 Something's not right"
+description: A bug, a wrong time or room, or something that looks broken.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Screenshots help a lot (paste them straight in).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: Now / Browse / My plan / Venue map
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone Safari · 402×874
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Filled in automatically when you use the planner's Feedback link.
+  - type: markdown
+    attributes:
+      value: Please don't paste anything private. Your plan stays in your browser and is never sent with feedback.

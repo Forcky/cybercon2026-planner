@@ -1,0 +1,30 @@
+name: "📍 Map, room or walking-time correction"
+description: A pin in the wrong place, a route through a wall, or a walking time that's off.
+labels: [map]
+body:
+  - type: input
+    id: room
+    attributes:
+      label: Room or location
+      placeholder: e.g. Room 211, Exhibition Hall
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What's wrong, and where should it be?
+      description: Room positions and walking times are estimates traced from MCEC's floor plans, so on-the-ground corrections are gold.
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+  - type: input
+    id: version
+    attributes:
+      label: App version

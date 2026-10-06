@@ -1,0 +1,13 @@
+# Build output
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Private content never belongs in this repo (it lives in a separate private repo)
+private/
+abstracts.json
+*.jpg
+*.jpeg

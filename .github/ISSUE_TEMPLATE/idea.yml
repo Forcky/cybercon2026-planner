@@ -1,0 +1,26 @@
+name: "💡 Idea or improvement"
+description: Something that would make the planner more useful.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it help?
+  - type: input
+    id: page
+    attributes:
+      label: Page
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+  - type: input
+    id: version
+    attributes:
+      label: App version
