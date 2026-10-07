@@ -12,7 +12,8 @@ user agent so the page knows it can hand over the plan.
 ## How it works
 
 - `App.js` loads https://cc26plan.nb-cs.net in a WebView. The site's service worker keeps it working
-  offline, and program updates arrive the same way they do in a browser.
+  offline, and program updates arrive the same way they do in a browser. (iOS only runs a service worker
+  in an app's WebView for its app-bound domains, so `app.config.js` lists the planner's host.)
 - When your plan or alert setting changes, the page's `nativeSync()` (in `src/planner.html`) posts
   your Going sessions to the app: id, title, room, start/end as UTC ms, and the walk from the
   session you'll have just left. In a normal browser it does nothing.

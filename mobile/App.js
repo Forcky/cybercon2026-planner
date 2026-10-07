@@ -139,6 +139,9 @@ function Planner() {
         // The renderer was killed (memory pressure) or crashed. Android: a new WebView is needed.
         onRenderProcessGone={() => { loaded.current = false; failed.current = false; setGeneration(g => g + 1); }}
         onContentProcessDidTerminate={() => web.current?.reload()}
+        // iOS: the site's service worker (offline use) only runs on an app-bound domain (app.config.js).
+        // Other hosts never load in here anyway: onShouldStart hands them to the browser.
+        limitsNavigationsToAppBoundDomains
         setSupportMultipleWindows={false}
         allowFileAccess={false}
         domStorageEnabled
