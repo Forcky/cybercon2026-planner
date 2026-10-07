@@ -6,7 +6,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/generated/icon.png",
-    "platforms": ["android", "ios"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "android": {
       "package": "com.forcky.cc26planner",
       "versionCode": 1,
@@ -15,7 +18,11 @@
         "foregroundImage": "./assets/generated/adaptive-icon.png",
         "backgroundColor": "#3355dd"
       },
-      "permissions": ["POST_NOTIFICATIONS", "SCHEDULE_EXACT_ALARM", "RECEIVE_BOOT_COMPLETED"],
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.CAMERA",
@@ -28,12 +35,17 @@
       "bundleIdentifier": "com.forcky.cc26planner",
       "buildNumber": "1",
       "supportsTablet": false,
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "plugins": [
       [
         "expo-notifications",
-        { "icon": "./assets/generated/notification-icon.png", "color": "#3355dd" }
+        {
+          "icon": "./assets/generated/notification-icon.png",
+          "color": "#3355dd"
+        }
       ],
       [
         "expo-camera",
@@ -43,7 +55,20 @@
           "recordAudioAndroid": false
         }
       ],
-      ["expo-build-properties", { "android": { "minSdkVersion": 26 } }]
-    ]
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "568c527d-437f-4b2d-9738-ef68d00e2603"
+      }
+    },
+    "owner": "forcky"
   }
 }
