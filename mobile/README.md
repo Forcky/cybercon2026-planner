@@ -30,6 +30,9 @@ user agent so the page knows it can hand over the plan.
 reminder several minutes late. Android 14+ turns it off by default, so the app asks once and links to
 the switch (`modules/exact-alarm`).
 
+**Force stop clears them:** Android's *Settings › Apps › Force stop* cancels every reminder the app has
+scheduled, until you next open it (it reschedules on launch). Swiping it away from recent apps doesn't.
+
 **Your plan is per app:** the app has its own storage, separate from your browser. To bring a plan
 across from a laptop, use **My plan › More › Send to another device** there, copy the link, then in
 the app use **My plan › More › Receive from another device** and paste it. (Scanning the QR code opens
