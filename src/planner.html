@@ -647,6 +647,18 @@ details.msel[open]>summary [data-ic] svg{transform:rotate(180deg)}
 .brand .unof{display:inline-block;margin-left:8px;padding:1px 6px;border:1px solid var(--border);border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);vertical-align:2px}
 .fbside{margin:4px 0 0;font-size:12px;color:var(--muted);text-align:center}
 @media(max-width:700px){.brand .unof{margin-left:0;padding:0;border:0;font-size:inherit;letter-spacing:inherit;vertical-align:0}.brand .unof::before{content:"\00a0· "}}
+/* ---------- Send to another device ---------- */
+#xfer{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#xfer .xbox{width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#xfer .xh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#xfer .xh b{font-size:16px;display:inline-flex;gap:8px;align-items:center}
+#xfer .xqr{background:#fff;border-radius:10px;padding:8px;align-self:center;width:min(300px,100%)}
+@media(min-width:701px){#xfer .xbox{width:min(520px,100%)}#xfer .xqr{width:min(420px,100%);padding:12px}}
+#xfer .xqr svg{display:block;width:100%;height:auto}
+#xfer .xa{display:flex;gap:8px}#xfer .xa button{flex:1}
+#xfer p{margin:0}
+#xfer .xtip{padding:8px 10px;border-radius:8px;background:var(--card)}
+.xferbox{border-color:var(--go)}.xferbox .note{margin:0}
 /* ---------- Now page ---------- */
 .nwwrap{max-width:1180px;margin:0 auto}
 .nwtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-size:15px}
@@ -1118,7 +1130,7 @@ let seenChanges=ls(KEY_SEEN,"");
 let nowSim=null,pendingShare=null,nowLiveOpen=false;
 // Read-only preview of a shared plan: your own plan, locks and backups are set aside and restored on exit.
 let PV=null;
-const PV_BLOCK=new Set(["go","maybe","lock","lockall","unlockall","bkset","swap","unbackup","clear","restore","backup","share"]);
+const PV_BLOCK=new Set(["xsend","xrecv","xapply","go","maybe","lock","lockall","unlockall","bkset","swap","unbackup","clear","restore","backup","share"]);
 function pvEnter(){if(PV||!pendingShare)return;PV={plan,locked,backups};plan={...pendingShare.plan};locked=new Set();backups={};mode="plan"}
 function pvExit(){if(!PV)return;({plan,locked,backups}=PV);PV=null}
 
@@ -1439,9 +1451,10 @@ function renderPlan(){
       <details class="more"><summary class="btn" title="More actions">${svg("dots")}</summary><div class="menu" role="menu">
       <button data-act="pcollapse" data-v="all">${svg("chev")}Collapse all days</button><button data-act="pcollapse" data-v="none">${svg("chev")}Expand all days</button>
       <button data-act="lockall">${svg("lock")}Lock all Going</button><button data-act="unlockall">${svg("unlock")}Unlock all</button><hr>
+      <button data-act="xsend">${svg("up")}Send to another device</button><button data-act="xrecv">${svg("down")}Receive from another device</button><hr>
       <button data-act="csv">${svg("file")}Export CSV</button><button data-act="backup">${svg("down")}Backup to file</button><button data-act="restore">${svg("up")}Restore from file</button><button data-act="print">${svg("print")}Print</button><hr>
       <button class="danger" data-act="clear">${svg("trash")}Clear plan</button><hr><button data-act="fb" data-t="bug">${svg("ext")}Report a problem</button><button data-act="fb" data-t="idea">${svg("ext")}Suggest an idea</button></div></details></div>
-  </div>`+shareBox()+changesAlert(items)+friendsPanel(gl);
+  </div>`+xferBox()+shareBox()+changesAlert(items)+friendsPanel(gl);
   if(!items.length)html+=`<p class="empty">Your plan is empty. Use <b>Going</b> or <b>Maybe</b> on sessions in <a href="#" data-act="tobrowse">Browse program</a>.</p>`;
   DAYS.forEach((d,di)=>{
     if(F.day!=="all"&&+F.day!==di)return;
@@ -1732,6 +1745,135 @@ document.addEventListener("pointerout",e=>{const a=e.target.closest("[data-tip]"
 window.addEventListener("scroll",()=>{if(TIP.anchor)requestAnimationFrame(tipPos)},{passive:true});
 window.addEventListener("resize",()=>{if(TIP.anchor)tipPos()});
 
+// ---------- QR codes (byte mode), after Project Nayuki's reference design ----------
+const qrSvg=(()=>{
+  const ECC={M:[0,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28],
+             L:[0,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30]};
+  const BLK={M:[0,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49],
+             L:[0,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25]};
+  const FMT={L:1,M:0};
+  const rawMods=v=>{let r=(16*v+128)*v+64;if(v>=2){const k=Math.floor(v/7)+2;r-=(25*k-10)*k-55;if(v>=7)r-=36}return r};
+  const dataCw=(v,e)=>Math.floor(rawMods(v)/8)-ECC[e][v]*BLK[e][v];
+  const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z&255};
+  function divisor(deg){const r=new Array(deg).fill(0);r[deg-1]=1;let root=1;for(let i=0;i<deg;i++){for(let j=0;j<deg;j++){r[j]=mul(r[j],root);if(j+1<deg)r[j]^=r[j+1]}root=mul(root,2)}return r}
+  function rem(data,div){const r=new Array(div.length).fill(0);for(const b of data){const f=b^r.shift();r.push(0);for(let i=0;i<div.length;i++)r[i]^=mul(div[i],f)}return r}
+  const maskBit=(k,x,y)=>{switch(k){case 0:return (x+y)%2===0;case 1:return y%2===0;case 2:return x%3===0;case 3:return (x+y)%3===0;
+    case 4:return (Math.floor(x/3)+Math.floor(y/2))%2===0;case 5:return x*y%2+x*y%3===0;case 6:return (x*y%2+x*y%3)%2===0;default:return ((x+y)%2+x*y%3)%2===0}};
+  function build(bytes,v,e,cc,cap){
+    const bb=[],put=(val,len)=>{for(let i=len-1;i>=0;i--)bb.push((val>>>i)&1)};
+    put(4,4);put(bytes.length,cc);for(const b of bytes)put(b,8);
+    put(0,Math.min(4,cap-bb.length));put(0,(8-bb.length%8)%8);
+    for(let p=0xEC;bb.length<cap;p^=0xEC^0x11)put(p,8);
+    const data=[];for(let i=0;i<bb.length;i+=8){let b=0;for(let j=0;j<8;j++)b=b<<1|bb[i+j];data.push(b)}
+    const nb=BLK[e][v],el=ECC[e][v],raw=Math.floor(rawMods(v)/8),nShort=nb-raw%nb,shortLen=Math.floor(raw/nb),div=divisor(el),blocks=[];
+    for(let i=0,k=0;i<nb;i++){const d=data.slice(k,k+shortLen-el+(i<nShort?0:1));k+=d.length;const ec=rem(d,div);if(i<nShort)d.push(0);blocks.push(d.concat(ec))}
+    const cw=[];for(let i=0;i<blocks[0].length;i++)for(let j=0;j<blocks.length;j++)if(i!==shortLen-el||j>=nShort)cw.push(blocks[j][i]);
+    const n=v*4+17,m=[...Array(n)].map(()=>new Array(n).fill(false)),fn=[...Array(n)].map(()=>new Array(n).fill(false));
+    const set=(x,y,d)=>{m[y][x]=d;fn[y][x]=true};
+    for(let i=0;i<n;i++){set(6,i,i%2===0);set(i,6,i%2===0)}
+    for(const [cx,cy] of [[3,3],[n-4,3],[3,n-4]])for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const x=cx+dx,y=cy+dy,dd=Math.max(Math.abs(dx),Math.abs(dy));if(x>=0&&x<n&&y>=0&&y<n)set(x,y,dd!==2&&dd!==4)}
+    const ap=[];if(v>1){const na=Math.floor(v/7)+2,step=v===32?26:Math.ceil((v*4+4)/(na*2-2))*2;ap.push(6);for(let p=n-7;ap.length<na;p-=step)ap.splice(1,0,p)}
+    ap.forEach((ax,i)=>ap.forEach((ay,j)=>{if((i===0&&j===0)||(i===0&&j===ap.length-1)||(i===ap.length-1&&j===0))return;
+      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)set(ax+dx,ay+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1)}));
+    const fmt=mask=>{const d=FMT[e]<<3|mask;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=(d<<10|r)^0x5412,g=i=>((b>>>i)&1)===1;
+      for(let i=0;i<=5;i++)set(8,i,g(i));set(8,7,g(6));set(8,8,g(7));set(7,8,g(8));for(let i=9;i<15;i++)set(14-i,8,g(i));
+      for(let i=0;i<8;i++)set(n-1-i,8,g(i));for(let i=8;i<15;i++)set(8,n-15+i,g(i));set(8,n-8,true)};
+    fmt(0);
+    if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=v<<12|r;for(let i=0;i<18;i++){const bit=((b>>>i)&1)===1,a=n-11+i%3,c=Math.floor(i/3);set(a,c,bit);set(c,a,bit)}}
+    let i=0;for(let right=n-1;right>=1;right-=2){if(right===6)right=5;for(let vert=0;vert<n;vert++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)===0,y=up?n-1-vert:vert;
+      if(!fn[y][x]&&i<cw.length*8){m[y][x]=((cw[i>>>3]>>>(7-(i&7)))&1)===1;i++}}}
+    const mask=k=>{for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!fn[y][x]&&maskBit(k,x,y))m[y][x]=!m[y][x]};
+    const pen=()=>{let s=0;
+      const run=get=>{for(let a=0;a<n;a++){let col=false,len=0;const h=[0,0,0,0,0,0,0];
+        const add=l=>{if(h[0]===0)l+=n;h.pop();h.unshift(l)};
+        const cnt=()=>{const k=h[1],core=k>0&&h[2]===k&&h[3]===k*3&&h[4]===k&&h[5]===k;return (core&&h[0]>=k*4&&h[6]>=k?1:0)+(core&&h[6]>=k*4&&h[0]>=k?1:0)};
+        for(let b=0;b<n;b++){const c=get(a,b);if(c===col){len++;if(len===5)s+=3;else if(len>5)s++}else{add(len);if(!col)s+=cnt()*40;col=c;len=1}}
+        if(col){add(len);len=0}len+=n;add(len);s+=cnt()*40}};
+      run((a,b)=>m[a][b]);run((a,b)=>m[b][a]);
+      let dark=0;for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(m[y][x])dark++;if(y<n-1&&x<n-1){const c=m[y][x];if(c===m[y][x+1]&&c===m[y+1][x]&&c===m[y+1][x+1])s+=3}}
+      return s+(Math.ceil(Math.abs(dark*20-n*n*10)/(n*n))-1)*10};
+    let best=0,bs=Infinity;for(let k=0;k<8;k++){mask(k);fmt(k);const p=pen();if(p<bs){bs=p;best=k}mask(k)}
+    mask(best);fmt(best);return {n,m};
+  }
+  function encode(text){
+    const bytes=new TextEncoder().encode(text);
+    // Level L: a screen gives a clean image, and lower density scans more easily off a laptop.
+    for(const e of ["L","M"])for(let v=1;v<=40;v++){const cc=v<10?8:16,cap=dataCw(v,e)*8;if(bytes.length<(1<<cc)&&4+cc+bytes.length*8<=cap)return build(bytes,v,e,cc,cap)}
+    return null;
+  }
+  return text=>{
+    const q=encode(text);if(!q)return null;const {n,m}=q,b=4;let d="";
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(m[y][x]){let w=1;while(x+w<n&&m[y][x+w])w++;d+=`M${x+b} ${y+b}h${w}v1h-${w}z`;x+=w-1}
+    return `<svg viewBox="0 0 ${n+2*b} ${n+2*b}" shape-rendering="crispEdges" role="img" aria-label="QR code"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+  };
+})();
+// ---------- Send the whole plan to another device (issue #4) ----------
+// Link fragment #x=<z|j><base64url>: z = deflate-raw compressed JSON, j = plain JSON.
+// Payload {v:1, t: sent at, d: {localStorage key: value}}. Fragments never reach the web server.
+const XFER_KEYS=()=>[KEY,KEY_H,KEY_L,KEY_B,KEY_C,KEY_BK,KEY_I,KEY_FR,KEY_FRH,KEY_N,KEY_ME,KEY_R,KEY_MS,KEY_SEEN];
+const XFER_QR_MAX=1800; // ~version 30; denser codes get hard to scan off a laptop screen
+let pendingXfer=null;
+const bytesB64u=b=>{let s="";for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode(...b.subarray(i,i+0x8000));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+const b64uBytes=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+const pipeBytes=async(bytes,stream)=>new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+async function xferEncode(){
+  const d={};for(const k of XFER_KEYS()){const v=localStorage.getItem(k);if(v!=null)d[k]=v}
+  const raw=new TextEncoder().encode(JSON.stringify({v:1,t:Date.now(),d}));
+  if(typeof CompressionStream==="function"){try{return "z"+bytesB64u(await pipeBytes(raw,new CompressionStream("deflate-raw")))}catch{}}
+  return "j"+bytesB64u(raw);
+}
+async function xferDecode(code){
+  const kind=code[0],bytes=b64uBytes(code.slice(1));
+  const raw=kind==="z"?await pipeBytes(bytes,new DecompressionStream("deflate-raw")):kind==="j"?bytes:null;
+  if(!raw)throw new Error("bad transfer");
+  const j=JSON.parse(new TextDecoder().decode(raw));
+  if(!j||j.v!==1||!j.d||typeof j.d!=="object")throw new Error("bad transfer");
+  const ok=new Set(XFER_KEYS()),d={};
+  for(const [k,v] of Object.entries(j.d))if(ok.has(k)&&typeof v==="string"&&v.length<500000)d[k]=v;
+  if(!(KEY in d))throw new Error("bad transfer");
+  return {t:Number.isFinite(j.t)?j.t:null,d};
+}
+const xferBase=()=>/^https?:$/.test(location.protocol)?location.origin+location.pathname:"https://cc26plan.nb-cs.net/";
+const xferCodeIn=t=>{t=String(t||"").trim();const m=/(?:#|&)x=([zj][A-Za-z0-9_-]+)/.exec(t)||/^([zj][A-Za-z0-9_-]{16,})$/.exec(t);return m?m[1]:null};
+function xferStats(get){
+  const js=(k,d)=>{try{const v=JSON.parse(get(k));return v??d}catch{return d}},arr=k=>{const v=js(k,[]);return Array.isArray(v)?v:[]};
+  const p=js(KEY,{}),fr=js(KEY_FR,{}),vals=p&&typeof p==="object"?Object.values(p):[];
+  return {go:vals.filter(v=>v==="go").length,maybe:vals.filter(v=>v==="maybe").length,locks:arr(KEY_L).length,hidden:arr(KEY_H).length,
+    friends:fr&&typeof fr==="object"&&!Array.isArray(fr)?Object.keys(fr).length:0,interests:arr(KEY_I).length};
+}
+const xferLine=s=>[`${s.go} going`,s.maybe?`${s.maybe} maybe`:"",s.locks?`${s.locks} lock${s.locks>1?"s":""}`:"",s.hidden?`${s.hidden} hidden`:"",
+  s.friends?`${s.friends} colleague${s.friends>1?"s":""}`:"",s.interests?`${s.interests} interest${s.interests>1?"s":""}`:""].filter(Boolean).join(" · ");
+const xferClose=()=>document.getElementById("xfer")?.remove();
+async function xferSend(){
+  xferClose();
+  const link=xferBase()+"#x="+(await xferEncode()),qr=link.length<=XFER_QR_MAX?qrSvg(link):null;
+  const el=document.createElement("div");el.id="xfer";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Send your plan to another device");el.dataset.link=link;
+  el.innerHTML=`<div class="xbox"><div class="xh"><b>${svg("up")}Send to another device</b><button class="icon muted" data-act="xclose" aria-label="Close">${svg("x")}</button></div>
+    <div class="sub">${xferLine(xferStats(k=>localStorage.getItem(k)))}</div>
+    ${qr?`<div class="xqr">${qr}</div><p class="sub">Scan this with your other device's camera. You'll be asked before its plan is replaced.</p>`
+      :`<p class="note">Your plan is too big for a QR code. Copy the link and send it to yourself instead (AirDrop, email or Notes).</p>`}
+    <div class="xa"><button class="primary" data-act="xcopy">${svg("link")}Copy link</button>${navigator.share?`<button data-act="xshare">${svg("ext")}Share…</button>`:""}</div>
+    <p class="sub xtip"><b>Planner on your iPhone home screen?</b> Links open in Safari, which keeps a separate plan. Copy the link, open the planner from your home screen, then use <b>My plan › More › Receive from another device</b> and paste it.</p>
+    <p class="sub">The link holds your whole plan, colleagues included, so only send it to yourself.</p></div>`;
+  document.body.appendChild(el);el.querySelector('[data-act="xcopy"]').focus();
+}
+function xferReceive(text){
+  const code=xferCodeIn(text);if(!code){alert("That doesn't look like a transfer link. Copy it again from the other device (My plan › More › Send to another device).");return}
+  xferDecode(code).then(x=>{xferClose();pendingXfer=x;mode="plan";render();window.scrollTo(0,0)}).catch(()=>alert("That transfer link couldn't be read. Copy it again from the other device."));
+}
+function loadTransfer(){
+  const code=xferCodeIn(location.hash);if(!code)return;
+  history.replaceState(null,"",location.pathname+location.search);
+  xferReceive("#x="+code);
+}
+function xferBox(){
+  if(!pendingXfer)return "";
+  const inc=xferStats(k=>pendingXfer.d[k]??null),cur=xferStats(k=>localStorage.getItem(k)),has=cur.go+cur.maybe+cur.friends+cur.hidden>0;
+  return `<div class="sharebox xferbox"><div class="sbt"><b>${svg("down")} Plan from your other device</b><span class="sub">${xferLine(inc)}${pendingXfer.t?` · sent ${ago(pendingXfer.t)}`:""}</span></div>
+    ${has?`<div class="note">This replaces everything currently on this device (${xferLine(cur)}).</div>`:""}
+    <div class="sba"><button class="primary" data-act="xapply">${svg("check")}Use it on this device</button><button class="muted" data-act="xcancel">Cancel</button></div></div>`;
+}
+
 function render(){
   const pb=$("#pvbar");document.body.classList.toggle("pvmode",!!PV);pb.hidden=!PV;
   if(PV){const g=Object.values(plan).filter(v=>v==="go").length;
@@ -1817,6 +1959,7 @@ function planDiff(a,b){
 }
 
 document.addEventListener("click",e=>{
+  if(e.target.id==="xfer"){xferClose();return}
   if(e.target.closest('[data-act="tipx"]')){tipClose();return}
   const tn=e.target.closest('[data-act="tipnav"]');if(tn){tipStep(+tn.dataset.d);return}
   const ti=e.target.closest(".tl-it,.tl-brk,.frb,.tchip");
@@ -1895,6 +2038,17 @@ document.addEventListener("click",e=>{
   if(a==="frpv"){const f=friends[t.dataset.k];if(f){pendingShare={plan:f.plan,name:f.name,a:f.a,t:f.t,stored:true};pvEnter();render();window.scrollTo(0,0)}return}
   if(a==="mstyle"){mapStyle={auto:"dark",dark:"light",light:"auto"}[mapStyle];lsSet(KEY_MS,mapStyle);return renderVenue()}
   if(a==="fb"){e.preventDefault();window.open(fbUrl(t.dataset.t||"bug"),"_blank","noopener");return}
+  if(a==="xsend"){xferSend();return}
+  if(a==="xrecv"){const v=prompt("Paste the transfer link from your other device:");if(v)xferReceive(v);return}
+  if(a==="xclose"){xferClose();return}
+  if(a==="xcopy"){const link=document.getElementById("xfer")?.dataset.link;if(!link)return;
+    navigator.clipboard.writeText(link).then(()=>{t.innerHTML=`${svg("check")}Copied`;setTimeout(()=>{if(t.isConnected)t.innerHTML=`${svg("link")}Copy link`},2000)}).catch(()=>prompt("Copy this link:",link));return}
+  if(a==="xshare"){const link=document.getElementById("xfer")?.dataset.link;if(link)navigator.share({title:"My CyberCon 2026 plan",url:link}).catch(()=>{});return}
+  if(a==="xcancel"){pendingXfer=null;return render()}
+  if(a==="xapply"){if(!pendingXfer)return;const d=pendingXfer.d;
+    for(const k of XFER_KEYS())try{localStorage.removeItem(k)}catch{}
+    for(const [k,v] of Object.entries(d))try{localStorage.setItem(k,v)}catch{}
+    location.reload();return}
   if(a==="ics")return exportIcs();
   if(a==="csv")return exportCsv();
   if(a==="share")return share();
@@ -1924,7 +2078,7 @@ document.addEventListener("change",e=>{
   render();
 });
 let qt;for(const id of ["#q","#qm"])$(id).addEventListener("input",e=>{const v=e.target.value;for(const o of ["#q","#qm"])if($(o)!==e.target)$(o).value=v;clearTimeout(qt);qt=setTimeout(()=>{F.q=v.trim();render()},150)});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.body.classList.remove("sheet-open");tipClose()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.body.classList.remove("sheet-open");tipClose();xferClose()}
   else if(TIP.pin&&TIP.anchor?.closest(".tl")&&(e.key==="ArrowLeft"||e.key==="ArrowRight")){e.preventDefault();tipStep(e.key==="ArrowRight"?1:-1)}});
 document.addEventListener("keydown",e=>{
   if((e.key==="Enter"||e.key===" ")&&e.target.matches?.('[role="button"][data-act]')){e.preventDefault();e.target.click();return}
@@ -1947,7 +2101,7 @@ cleanBackups();
 setInterval(()=>{if(mode==="now"&&!nowSim&&!document.querySelector("#view :focus")){const y=window.scrollY;render();window.scrollTo(0,y)}},30000);
 {let lastY=0;window.addEventListener("scroll",()=>{const y=window.scrollY;if(Math.abs(y-lastY)<8)return;
   document.body.classList.toggle("mbar-hide",y>lastY&&y>140&&!document.activeElement?.matches?.("#qm"));lastY=y},{passive:true})}
-loadShared();buildFilters();render();
+loadTransfer();loadShared();buildFilters();render();
 </script>
 </body>
 </html>
