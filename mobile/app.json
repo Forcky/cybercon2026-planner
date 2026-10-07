@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "CC26 Planner",
+    "slug": "cc26-planner",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/generated/icon.png",
+    "platforms": ["android", "ios"],
+    "android": {
+      "package": "com.forcky.cc26planner",
+      "versionCode": 1,
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/generated/adaptive-icon.png",
+        "backgroundColor": "#3355dd"
+      },
+      "permissions": ["POST_NOTIFICATIONS", "SCHEDULE_EXACT_ALARM", "RECEIVE_BOOT_COMPLETED"],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.forcky.cc26planner",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        { "icon": "./assets/generated/notification-icon.png", "color": "#3355dd" }
+      ],
+      ["expo-build-properties", { "android": { "minSdkVersion": 26 } }]
+    ]
+  }
+}
