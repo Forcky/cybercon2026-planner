@@ -27,7 +27,7 @@ tools/update_program.py refreshes data/ from the official program
 ```
 
 ```powershell
-pip install pillow
+pip install -r requirements.txt
 python tools/build.py        # -> dist/public (open dist/public/index.html, or serve the folder)
 ```
 
@@ -44,10 +44,16 @@ pull request to make sure none of it ends up here.
 This repo has no secrets and no deploy credentials. Its workflow only builds and checks the public edition with a
 read-only token; deployment happens from the private repo. Actions are pinned to commit SHAs.
 
+## Licence
+
+The code is [MIT licensed](LICENSE). That covers this repo's code only, not the CyberCon program (© AISA),
+MCEC's floor plans (© MCEC) or the CyberCon name.
+
 ## Feedback and contributions
 
 Bugs, ideas and map corrections are very welcome: use the **Feedback** links in the planner (they pre-fill the page,
-device and version) or [open an issue](../../issues/new/choose). Room positions and walking times are estimates
+device and version) or [open an issue](../../issues/new/choose). Security problems: please use
+[private vulnerability reporting](SECURITY.md) instead. Code changes: see [CONTRIBUTING.md](CONTRIBUTING.md). Room positions and walking times are estimates
 traced from MCEC's published plans, so corrections from people on site are especially useful.
 
 ---

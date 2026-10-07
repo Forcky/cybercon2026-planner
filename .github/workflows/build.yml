@@ -35,7 +35,7 @@ jobs:
         env:
           BUILD_ID: ${{ github.sha }}
         run: |
-          pip install --quiet pillow
+          pip install --quiet -r requirements.txt
           python tools/build.py
           echo "### Public edition built from \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
 
