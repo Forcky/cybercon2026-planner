@@ -57,5 +57,7 @@ npm run android               # release build installed on a USB-connected phone
 `EXPO_PUBLIC_PLANNER_URL=https://...` points a build at another copy of the site, and
 `EXPO_PUBLIC_WEBVIEW_DEBUG=1` lets `chrome://inspect` attach to the WebView (local test builds only).
 
-Store and TestFlight builds use EAS (`eas build --profile production`, `eas submit` to the Play
-internal track); the `eas-build-post-install` script draws the icons there.
+Store and TestFlight builds use EAS: `npm run build:android` / `npm run build:ios` draw the icons
+locally and start `eas build --profile production` (`eas submit` sends Android builds to the Play
+internal track). The repo-root `.easignore` uploads the drawn icons with the build, so the EAS
+builder needs no Python; it otherwise mirrors the `.gitignore` files.

@@ -8,7 +8,8 @@
     "prebuild": "npm run icons && expo prebuild --platform android",
     "android": "npm run icons && expo run:android --variant release",
     "test": "node --test \"test/*.test.mjs\"",
-    "eas-build-post-install": "python3 -m venv /tmp/cc26-icons && /tmp/cc26-icons/bin/pip install --quiet -r ../requirements.txt && /tmp/cc26-icons/bin/python scripts/icons.py"
+    "build:android": "npm run icons && eas build -p android --profile production",
+    "build:ios": "npm run icons && eas build -p ios --profile production"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
