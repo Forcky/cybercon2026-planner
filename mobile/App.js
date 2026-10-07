@@ -1,13 +1,14 @@
 // The planner site in a WebView, plus native reminders for your Going sessions.
 // See README.md for how the page and the app talk to each other.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, Linking, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Alert, AppState, BackHandler, Linking, Platform, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
-import { PAGE_SCRIPT, SHOW_NOW } from './src/bridge';
+import { Camera, CameraView } from 'expo-camera';
+import { PAGE_SCRIPT, PASTE_LINK, SHOW_NOW, receiveLink } from './src/bridge';
 import { buildReminders, parsePlan } from './src/reminders';
 import { applyReminders } from './src/notify';
 
@@ -68,6 +69,44 @@ function Planner() {
     return () => sub.remove();
   }, [run]);
 
+  // Receive from another device: scan the QR code the other device shows, or paste its link.
+  // The scanner is the system one (Google code scanner / iOS VisionKit), so the app needs no camera
+  // access on Android. Only a planner transfer link (…#x=…) is handed to the page, which then shows
+  // what would change and waits for "Use it on this device".
+  const scanning = useRef(false);
+  useEffect(() => {
+    const sub = CameraView.onModernBarcodeScanned(({ data }) => {
+      if (!scanning.current) return;
+      scanning.current = false;
+      CameraView.dismissScanner().catch(() => {});
+      if (isPlanner(data) && /#x=[\w-]+$/.test(data)) run(receiveLink(data));
+      else Alert.alert('Not a transfer link', 'Scan the QR code from My plan › More › Send to another device on the other device.');
+    });
+    return () => sub.remove();
+  }, [run]);
+  const receive = useCallback(() => {
+    const paste = () => run(PASTE_LINK);
+    const cantScan = msg => Alert.alert("Can't scan", msg, [{ text: 'Cancel', style: 'cancel' }, { text: 'Paste link', onPress: paste }]);
+    const scan = async () => {
+      // iOS's scanner only opens once the app has camera access, and doesn't ask for it itself.
+      // (Android's runs in Play services and needs none; the app doesn't even declare it.)
+      if (Platform.OS === 'ios' && !(await Camera.requestCameraPermissionsAsync()).granted) {
+        return cantScan('Camera access is off for CC26 Planner (Settings › CC26 Planner › Camera). You can paste the link instead.');
+      }
+      scanning.current = true;
+      CameraView.launchScanner({ barcodeTypes: ['qr'] }).catch(e => {
+        scanning.current = false;
+        if (!/cancel/i.test(`${e?.code} ${e?.message}`)) cantScan("The QR scanner isn't available on this phone. You can paste the link instead.");
+      });
+    };
+    if (!CameraView.isModernBarcodeScannerAvailable) return paste();
+    Alert.alert('Receive from another device', 'On the other device, open My plan › More › Send to another device.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Paste link', onPress: paste },
+      { text: 'Scan QR code', onPress: scan },
+    ]);
+  }, [run]);
+
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!canGoBack.current) return false;
@@ -92,6 +131,8 @@ function Planner() {
     if (msg.type === 'cc26-plan') {
       const plan = parsePlan(msg);
       if (plan) applyReminders(buildReminders(plan));
+    } else if (msg.type === 'cc26-receive') {
+      receive();
     } else if (msg.type === 'cc26-theme') {
       if (typeof msg.bg === 'string' && /^rgba?\([\d.,\s]+\)$/.test(msg.bg)) setBg(msg.bg);
     } else if (msg.type === 'cc26-file' && typeof msg.name === 'string') {
@@ -105,7 +146,7 @@ function Planner() {
         console.warn('share failed', err);
       }
     }
-  }, [run]);
+  }, [run, receive]);
 
   // The planner stays in the app. Other https links the user follows (official session pages, GitHub
   // feedback) open in the browser; every other scheme (intent:, market:, file:, ...) and any subframe

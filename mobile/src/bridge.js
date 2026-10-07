@@ -35,11 +35,24 @@ export const PAGE_SCRIPT = `(function(){
       Storage.prototype.setItem=function(k,v){set.call(this,k,v);if(k==="cybercon2026-plan-v1"||k==="cybercon2026-remind-v1")setTimeout(window.nativeSync,0)};
       window.download=function(name,type,text){post({type:"cc26-file",name:name,mime:type,text:text})};
     }
+    // Receive from another device: let the app offer its QR scanner as well as pasting the link
+    // (capture phase, so the page's own prompt() never opens; previewing a shared plan still blocks it).
+    if(typeof xferReceive==="function")document.addEventListener("click",function(e){
+      var t=e.target.closest&&e.target.closest('[data-act="xrecv"]');if(!t||(typeof PV!=="undefined"&&PV))return;
+      e.stopImmediatePropagation();e.preventDefault();
+      document.querySelectorAll("details.more[open]").forEach(function(d){d.open=false});
+      post({type:"cc26-receive"});
+    },true);
     var bg=function(){post({type:"cc26-theme",bg:getComputedStyle(document.body).backgroundColor})};
     bg();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",bg)}catch(e){}
   }
   if(typeof nativeSync==="function")nativeSync();
 })();true;`;
+
+// Hands a transfer link (scanned or pasted in the app) to the page's own Receive flow, which shows what
+// would change and waits for "Use it on this device".
+export const receiveLink = link => `(function(){if(typeof xferReceive==="function")xferReceive(${JSON.stringify(String(link))})})();true;`;
+export const PASTE_LINK = `(function(){var v=prompt("Paste the transfer link from your other device:");if(v&&typeof xferReceive==="function")xferReceive(v)})();true;`;
 
 // Opens the Now tab, e.g. after tapping a reminder.
 export const SHOW_NOW = `(function(){var t=document.getElementById("tabNow");if(t)t.click();window.scrollTo(0,0)})();true;`;
